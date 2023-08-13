@@ -11,10 +11,9 @@ const { isAuthenticated, isAdmin } = require("../middleware/auth");
 
 // create user
 router.post("/create-user", async (req, res, next) => {
-
-
   try {
-    const { name, email, avatar, password, zipCode, address, phoneNumber } = req.body;
+    const { name, email, avatar, password, zipCode, address, phoneNumber } =
+      req.body;
     let user = await User.findOne({ email });
 
     if (user) {
@@ -33,10 +32,9 @@ router.post("/create-user", async (req, res, next) => {
 
     sendToken(user, 201, res);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return next(new ErrorHandler(error.message, 500));
   }
-
 });
 
 // create activation token
@@ -52,7 +50,7 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email, password } = req.body;
-      console.log(email, password)
+      console.log(email, password);
       if (!email || !password) {
         return next(new ErrorHandler("Please provide the all fields!", 400));
       }
@@ -109,7 +107,7 @@ router.get(
         expires: new Date(Date.now()),
         httpOnly: true,
       });
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message: "Log out successful!",
       });
@@ -126,7 +124,7 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email, password, phoneNumber, name } = req.body;
-      console.log(req.body)
+      console.log(req.body);
 
       const user = await User.findOne({ email }).select("+password");
 
@@ -148,7 +146,7 @@ router.put(
 
       await user.save();
 
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         user,
       });
