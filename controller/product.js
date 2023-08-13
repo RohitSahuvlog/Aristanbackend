@@ -14,8 +14,8 @@ router.post(
   // isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      console.log(req.userId)
-      const userId = "64c4efdc1f6a601d02fcf2f0";
+      console.log(req.userId);
+      const userId = "64d7cc6b245f78feb3d22dd5";
       const admin = await User.findById(userId);
       if (!admin) {
         return next(new ErrorHandler("admin Id is invalid!", 400));
@@ -51,7 +51,7 @@ router.post(
         });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       return next(new ErrorHandler(error, 400));
     }
   })
