@@ -5,7 +5,6 @@ const cloudinary = require("cloudinary");
 const ErrorHandler = require("../utils/ErrorHandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const jwt = require("jsonwebtoken");
-const sendMail = require("../utils/sendMail");
 const sendToken = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
 
@@ -37,6 +36,34 @@ router.post("/create-user", async (req, res, next) => {
   }
 });
 
+router.post("/create-seller", async (req, res, next) => {
+  try {
+    const { name, email, avatar, password, zipCode, address, phoneNumber } =
+      req.body;
+    let user = await User.findOne({ email });
+
+    if (user) {
+      return next(new ErrorHandler("User already exists", 400));
+    }
+    user = await User.create({
+      name,
+      email,
+      avatar,
+      password,
+      zipCode,
+      address,
+      phoneNumber,
+      role: "seller"
+    });
+    user.save();
+
+    sendToken(user, 201, res);
+  } catch (error) {
+    console.log(error);
+    return next(new ErrorHandler(error.message, 500));
+  }
+});
+
 // create activation token
 const createActivationToken = (user) => {
   return jwt.sign(user, process.env.ACTIVATION_SECRET, {
@@ -56,7 +83,6 @@ router.post(
       }
 
       const user = await User.findOne({ email }).select("+password");
-
       if (!user) {
         return next(new ErrorHandler("User doesn't exists!", 400));
       }
@@ -191,105 +217,7 @@ router.put(
   })
 );
 
-// update user addresses
-router.put(
-  "/update-user-addresses",
-  isAuthenticated,
-  catchAsyncErrors(async (req, res, next) => {
-    try {
-      const user = await User.findById(req.user.id);
 
-      const sameTypeAddress = user.addresses.find(
-        (address) => address.addressType === req.body.addressType
-      );
-      if (sameTypeAddress) {
-        return next(
-          new ErrorHandler(`${req.body.addressType} address already exists`)
-        );
-      }
-
-      const existsAddress = user.addresses.find(
-        (address) => address._id === req.body._id
-      );
-
-      if (existsAddress) {
-        Object.assign(existsAddress, req.body);
-      } else {
-        // add the new address to the array
-        user.addresses.push(req.body);
-      }
-
-      await user.save();
-
-      res.status(200).json({
-        success: true,
-        user,
-      });
-    } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
-    }
-  })
-);
-
-// delete user address
-router.delete(
-  "/delete-user-address/:id",
-  isAuthenticated,
-  catchAsyncErrors(async (req, res, next) => {
-    try {
-      const userId = req.user._id;
-      const addressId = req.params.id;
-
-      await User.updateOne(
-        {
-          _id: userId,
-        },
-        { $pull: { addresses: { _id: addressId } } }
-      );
-
-      const user = await User.findById(userId);
-
-      res.status(200).json({ success: true, user });
-    } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
-    }
-  })
-);
-
-// update user password
-router.put(
-  "/update-user-password",
-  isAuthenticated,
-  catchAsyncErrors(async (req, res, next) => {
-    try {
-      const user = await User.findById(req.user.id).select("+password");
-
-      const isPasswordMatched = await user.comparePassword(
-        req.body.oldPassword
-      );
-
-      if (!isPasswordMatched) {
-        return next(new ErrorHandler("Old password is incorrect!", 400));
-      }
-
-      if (req.body.newPassword !== req.body.confirmPassword) {
-        return next(
-          new ErrorHandler("Password doesn't matched with each other!", 400)
-        );
-      }
-      user.password = req.body.newPassword;
-
-      await user.save();
-
-      res.status(200).json({
-        success: true,
-        message: "Password updated successfully!",
-      });
-    } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
-    }
-  })
-);
 
 // find user infoormation with the userId
 router.get(

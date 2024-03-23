@@ -9,11 +9,11 @@ const cloudinary = require("cloudinary");
 // });
 
 // // config
-// if (process.env.NODE_ENV !== "PRODUCTION") {
-//   require("dotenv").config({
-//     path: "config/.env",
-//   });
-// }
+if (process.env.NODE_ENV !== "PRODUCTION") {
+  require("dotenv").config({
+    path: ".env",
+  });
+}
 
 // connect db
 connectDatabase();

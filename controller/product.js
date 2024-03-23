@@ -15,41 +15,41 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       console.log(req.userId);
-      const userId = "64d7cc6b245f78feb3d22dd5";
+      const userId = "65fb1b9d7b9b2ac9faa0007c";
       const admin = await User.findById(userId);
-      if (!admin) {
-        return next(new ErrorHandler("admin Id is invalid!", 400));
+      // if (!admin) {
+      //   return next(new ErrorHandler("admin Id is invalid!", 400));
+      // } else {
+      let images = [];
+      if (typeof req.body.images === "string") {
+        images.push(req.body.images);
       } else {
-        let images = [];
-        if (typeof req.body.images === "string") {
-          images.push(req.body.images);
-        } else {
-          images = req.body.images;
-        }
+        images = req.body.images;
+      }
 
-        const imagesLinks = [];
+      const imagesLinks = [];
 
-        for (let i = 0; i < images.length; i++) {
-          const result = await cloudinary.v2.uploader.upload(images[i], {
-            folder: "products",
-          });
+      for (let i = 0; i < images.length; i++) {
+        const result = await cloudinary.v2.uploader.upload(images[i], {
+          folder: "products",
+        });
 
-          imagesLinks.push({
-            public_id: result.public_id,
-            url: result.secure_url,
-          });
-        }
-
-        const productData = req.body;
-        productData.images = imagesLinks;
-        productData.userId = admin._id;
-        const product = await Product.create(productData);
-
-        res.status(201).json({
-          success: true,
-          product,
+        imagesLinks.push({
+          public_id: result.public_id,
+          url: result.secure_url,
         });
       }
+
+      const productData = req.body;
+      productData.images = imagesLinks;
+      productData.userId = "65fb1b9d7b9b2ac9faa0007c";
+      const product = await Product.create(productData);
+
+      res.status(201).json({
+        success: true,
+        product,
+      });
+      // }
     } catch (error) {
       console.log(error);
       return next(new ErrorHandler(error, 400));
